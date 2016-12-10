@@ -6,7 +6,9 @@
     "start": "electron ."
   },
   "devDependencies": {
-    "electron-prebuilt": "^1.3.9"
+    "electron-prebuilt": "^1.4.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "usb": "^1.1.2"
+  }
 }
