@@ -1,6 +1,9 @@
 <template>
   <div id="joey">
-    <h3 class="title is-4">Joey-Joebags</h3>
+    <h3 class="title is-4">Joey-Joebags is </h3>
+    <h3 class="title is-4" v-if="device">connected!</h3>
+    <h3 class="title is-4" v-else>not connected!</h3>
+    <h3 class="title is-4">{{fwVersion}}</h3>
     <hr>
     <div class="columns">
       <div class="column">
@@ -78,6 +81,8 @@
 </template>
 
 <script>
+  import joey from '../../hardware/joey'
+
   export default {
     data () {
       return {
@@ -85,7 +90,9 @@
         cartType: null,
         input: null,
         inputHelpText: '',
-        file: null
+        file: null,
+        device: null,
+        fwVersion: null
       }
     },
 
@@ -114,6 +121,20 @@
         if (this.cartType !== null && this.file !== null) {
           console.log('programming ' + this.cartType + ' with ' + this.file.path)
         }
+      }
+    },
+
+    created () {
+      this.device = joey.getDevice()
+      if (this.device) {
+        joey.getFirmwareVersion(this.device)
+        .then(
+          response => {
+            console.log(response)
+            this.fwVersion = response
+            console.log(joey.readCartHeader(this.device))
+          }
+        )
       }
     }
   }
