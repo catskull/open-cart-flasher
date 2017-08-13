@@ -7,6 +7,23 @@
     <hr>
     <div class="columns">
       <div class="column">
+        <p>Name: {{romName}}</p>
+        <p>ROM Size: {{romSize}}</p>
+        <p>RAM Size: {{ramSize}}</p>
+        <a
+          class="button is-info"
+          v-on:click="readHeader()"
+          :disabled="device === null"
+          >
+          <span>Read Header</span>
+          <!-- <span class="icon">
+            <i class="fa fa-bolt"></i>
+          </span> -->
+        </a>
+      </div>
+    </div>
+    <div class="columns">
+      <div class="column">
         <div class="field">
           <div class="label">Cart Type</div>
           <div class="control">
@@ -130,6 +147,28 @@
       getCharAsDecimalUTF8 (char) {
         const getUTF8 = escape(char)
         return parseInt(getUTF8.substring(getUTF8.match(/u/) !== null ? 2 : 1), 16)
+      },
+
+      readHeader () {
+        joey.readCartHeader(this.device)
+        .then(
+          data => {
+            data.forEach(e => {
+              this.header += e
+            })
+            this.romName = this.header.slice(0x32, 0x41)
+            const RAMtypes = ['no SRAM', '2 kilobytes', '8 kilobytes', '32 kilobytes', '128 kilobytes', '64 kilobytes']
+            const ROMtypes = ['32 kilobytes', '64 kilobytes', '128 kilobytes', '256 kilobytes', '512 kilobytes', '1 megabyte', '2 megabytes', '4 megabytes', '8 megabytes', '1.1 megabytes', '1.2 megabytes', '1.5 megabytes']
+            const ramIndex = this.getCharAsDecimalUTF8(this.header[0x47])
+            const romIndex = this.getCharAsDecimalUTF8(this.header[0x46])
+            this.ramSize = RAMtypes[ramIndex]
+            this.romSize = ROMtypes[romIndex]
+          },
+
+          error => {
+            console.log(error)
+          }
+        )
       }
     },
 
@@ -140,25 +179,6 @@
         .then(
           response => {
             this.fwVersion = response
-            joey.readCartHeader(this.device)
-            .then(
-              data => {
-                data.forEach(e => {
-                  this.header += e
-                })
-                this.romName = this.header.slice(0x32, 0x41)
-                const RAMtypes = ['no SRAM', '2 kilobytes', '8 kilobytes', '32 kilobytes', '128 kilobytes', '64 kilobytes']
-                const ROMtypes = ['32 kilobytes', '64 kilobytes', '128 kilobytes', '256 kilobytes', '512 kilobytes', '1 megabyte', '2 megabytes', '4 megabytes', '8 megabytes', '1.1 megabytes', '1.2 megabytes', '1.5 megabytes']
-                const ramIndex = this.getCharAsDecimalUTF8(this.header[0x47])
-                const romIndex = this.getCharAsDecimalUTF8(this.header[0x46])
-                this.ramSize = RAMtypes[ramIndex]
-                this.romSize = ROMtypes[romIndex]
-              },
-
-              error => {
-                console.log(error)
-              }
-            )
           }
         )
       }
