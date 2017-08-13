@@ -147,10 +147,12 @@
                   this.header += e
                 })
                 this.romName = this.header.slice(0x32, 0x41)
-                const RAMtypes = [0, 2048, 8192, 32768, (32768 * 4), (32768 * 2)]
+                const RAMtypes = ['no SRAM', '2 kilobytes', '8 kilobytes', '32 kilobytes', '128 kilobytes', '64 kilobytes']
+                const ROMtypes = ['32 kilobytes', '64 kilobytes', '128 kilobytes', '256 kilobytes', '512 kilobytes', '1 megabyte', '2 megabytes', '4 megabytes', '8 megabytes', '1.1 megabytes', '1.2 megabytes', '1.5 megabytes']
                 const ramIndex = this.getCharAsDecimalUTF8(this.header[0x47])
+                const romIndex = this.getCharAsDecimalUTF8(this.header[0x46])
                 this.ramSize = RAMtypes[ramIndex]
-                this.romSize = (32768 * (Math.pow(2, this.getCharAsDecimalUTF8(this.header[0x48]))))
+                this.romSize = ROMtypes[romIndex]
               },
 
               error => {
