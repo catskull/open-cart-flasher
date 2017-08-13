@@ -33,58 +33,54 @@ export default {
   readCartHeader (device) {
     setBank(device, 0, 0)
     ROMBankSwitch(device, 1)
-    // const RAMtypes = [0, 2048, 8192, 32768, (32768 * 4), (32768 * 2)]
-    // global ROMsize
-    // global RAMsize
-    let header = ''
-    device.interfaces[0].endpoints[1].transfer([0x10, 0x00, 0x00, 0x01, 0x00])
-    // dev.write(0x01,[0x10,0x00,0x00,0x01,0x00])
-    // dat = dev.read(0x81,64)
-    device.interfaces[0].endpoints[0].transfer(64, (error, data) => {
-      if (error) { console.log(error) }
-      header += data
-    })
-    // Header=dat
-    // const msg = [0x10, 0x00, 0x00, 0x01, 0x40]
-    device.interfaces[0].endpoints[1].transfer([0x10, 0x00, 0x00, 0x01, 0x40])
-    // dev.write(0x01,msg)
-    // dat = dev.read(0x81,64)
-    // Header+=dat
-    device.interfaces[0].endpoints[0].transfer(64, (error, data) => {
-      if (error) { console.log(error) }
-      header += data
-    })
-    // msg = [0x10, 0x00, 0x00, 0x01, 0x80]
-    // dev.write(0x01,msg)
-    device.interfaces[0].endpoints[1].transfer([0x10, 0x00, 0x00, 0x01, 0x80])
-    // dat = dev.read(0x81,64)
-    device.interfaces[0].endpoints[0].transfer(64, (error, data) => {
-      if (error) { console.log(error) }
-      header += data
-      console.log(header.slice(0x32, 0x43))
-    })
-    // Header+=dat #Header contains 0xC0 bytes of header data
-    // const romSize = (32768 * (Math.pow(2, header[0x48])))
-    // const romName = header[0x34:0x43]
-    // romName = re.sub(r'\W+', '', romName)
-    // app.ROMtitleLabel.set("ROM Name: " + romName )
-    // app.ROMsizeLabel.set("ROM Size: "+str (32768*( 2**(Header[0x48]))))
-    // const ramSize = RAMtypes[header[0x49]]
-    // app.RAMsizeLabel.set("RAM Size:"+str(RAMsize))
-    // root.update()
-    return header
+
+    writeDevice(device, [0x10, 0x00, 0x00, 0x01, 0x00])
+
+    let v1 = readDevice(device)
+
+    writeDevice(device, [0x10, 0x00, 0x00, 0x01, 0x40])
+
+    let v2 = readDevice(device)
+
+    writeDevice(device, [0x10, 0x00, 0x00, 0x01, 0x80])
+
+    let v3 = readDevice(device)
+
+    return Promise.all([v1, v2, v3])
   }
 }
 
-function setBank (device, blk, sublk) {
-  // Lock cart before writing
-  sublk = sublk * 64
-  // print (hex(blk),hex(sublk))
-  device.interfaces[0].endpoints[1].transfer([0x0A, 0x00, 0x03, 0x70, 0x00, sublk, 0x70, 0x01, 0xE0, 0x70, 0x02, blk])
-  // USBbuffer = dev.read(0x81,64)
-  device.interfaces[0].endpoints[0].transfer(64, (error, data) => {
-    if (error) { console.log(error) }
+function readDevice (device) {
+  return new Promise((resolve, reject) => {
+    device.interfaces[0].endpoints[0].transfer(64, (error, data) => {
+      if (error) {
+        reject(error)
+      }
+
+      resolve(data)
+    })
   })
+}
+
+function writeDevice (device, data) {
+  return device.interfaces[0].endpoints[1].transfer(data)
+}
+
+function setBank (device, blk, sublk) {
+  sublk = sublk * 64
+
+  writeDevice(device, [0x0A, 0x00, 0x03, 0x70, 0x00, sublk, 0x70, 0x01, 0xE0, 0x70, 0x02, blk])
+
+  readDevice(device)
+  .then(
+    data => {
+      console.log(data)
+    },
+
+    error => {
+      console.log(error)
+    }
+  )
 }
 
 function ROMBankSwitch (device, bankNumber) {
@@ -93,17 +89,30 @@ function ROMBankSwitch (device, bankNumber) {
   let bhi = bankNumber >> 8
   let blo = bankNumber & 0xFF
   if (bhi > 0) {
-    device.interfaces[0].endpoints[1].transfer([0x0A, 0x00, 0x01, 0x30, 0x00, bhi])
-    // dev.write(0x01,[0x0A,0x00,0x01,0x30,0x00,bhi])
-    // USBbuffer = dev.read(0x81,64)
-    device.interfaces[0].endpoints[0].transfer(64, (error, data) => {
-      if (error) { console.log(error) }
-    })
+    writeDevice(device, [0x0A, 0x00, 0x01, 0x30, 0x00, bhi])
+
+    readDevice(device)
+    .then(
+      data => {
+        console.log(data)
+      },
+
+      error => {
+        console.log(error)
+      }
+    )
   }
-  device.interfaces[0].endpoints[1].transfer([0x0A, 0x00, 0x01, 0x21, 0x00, blo])
-  // dev.write(0x01,[0x0A,0x00,0x01,0x21,0x00,blo])
-  // USBbuffer = dev.read(0x81,64)
-  device.interfaces[0].endpoints[0].transfer(64, (error, data) => {
-    if (error) { console.log(error) }
-  })
+
+  writeDevice(device, [0x0A, 0x00, 0x01, 0x21, 0x00, blo])
+
+  readDevice(device)
+  .then(
+    data => {
+      console.log(data)
+    },
+
+    error => {
+      console.log(error)
+    }
+  )
 }

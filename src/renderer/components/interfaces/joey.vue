@@ -1,9 +1,9 @@
 <template>
   <div id="joey">
-    <h3 class="title is-4">Joey-Joebags is </h3>
-    <h3 class="title is-4" v-if="device">connected!</h3>
-    <h3 class="title is-4" v-else>not connected!</h3>
-    <h3 class="title is-4">{{fwVersion}}</h3>
+    <h4 class="title is-4">Joey-Joebags is </h4>
+    <h4 class="title is-4" v-if="device">connected!</h4>
+    <h4 class="title is-4" v-else>not connected!</h4>
+    <h6 v-if="fwVersion" class="title is-6">{{fwVersion}}</h6>
     <hr>
     <div class="columns">
       <div class="column">
@@ -92,7 +92,11 @@
         inputHelpText: '',
         file: null,
         device: null,
-        fwVersion: null
+        fwVersion: null,
+        header: '',
+        romName: null,
+        ramSize: 0,
+        romSize: 0
       }
     },
 
@@ -121,6 +125,11 @@
         if (this.cartType !== null && this.file !== null) {
           console.log('programming ' + this.cartType + ' with ' + this.file.path)
         }
+      },
+
+      getCharAsDecimalUTF8 (char) {
+        const getUTF8 = escape(char)
+        return parseInt(getUTF8.substring(getUTF8.match(/u/) !== null ? 2 : 1), 16)
       }
     },
 
@@ -130,9 +139,24 @@
         joey.getFirmwareVersion(this.device)
         .then(
           response => {
-            console.log(response)
             this.fwVersion = response
-            console.log(joey.readCartHeader(this.device))
+            joey.readCartHeader(this.device)
+            .then(
+              data => {
+                data.forEach(e => {
+                  this.header += e
+                })
+                this.romName = this.header.slice(0x32, 0x41)
+                const RAMtypes = [0, 2048, 8192, 32768, (32768 * 4), (32768 * 2)]
+                const ramIndex = this.getCharAsDecimalUTF8(this.header[0x47])
+                this.ramSize = RAMtypes[ramIndex]
+                this.romSize = (32768 * (Math.pow(2, this.getCharAsDecimalUTF8(this.header[0x48]))))
+              },
+
+              error => {
+                console.log(error)
+              }
+            )
           }
         )
       }
@@ -143,5 +167,14 @@
 <style scoped>
 #joey {
   padding-top: 10px;
+}
+
+h4, h6 {
+  display: inline;
+}
+
+h6 {
+  float: right;
+  margin-right: 1rem;
 }
 </style>
