@@ -31,6 +31,7 @@ export default {
   },
 
   readCartHeader (device) {
+    device.reset()
     setBank(device, 0, 0)
     ROMBankSwitch(device, 1)
 
@@ -74,7 +75,7 @@ function setBank (device, blk, sublk) {
   readDevice(device)
   .then(
     data => {
-      console.log(data)
+      // console.log(data)
     },
 
     error => {
@@ -94,7 +95,7 @@ function ROMBankSwitch (device, bankNumber) {
     readDevice(device)
     .then(
       data => {
-        console.log(data)
+        // console.log(data)
       },
 
       error => {
@@ -108,7 +109,7 @@ function ROMBankSwitch (device, bankNumber) {
   readDevice(device)
   .then(
     data => {
-      console.log(data)
+      // console.log(data)
     },
 
     error => {

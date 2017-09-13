@@ -10,6 +10,7 @@
         <p>Name: {{romName}}</p>
         <p>ROM Size: {{romSize}}</p>
         <p>RAM Size: {{ramSize}}</p>
+        <p>MBC: {{mbcType}}</p>
         <a
           class="button is-info"
           v-on:click="readHeader()"
@@ -113,7 +114,8 @@
         header: '',
         romName: null,
         ramSize: 0,
-        romSize: 0
+        romSize: 0,
+        mbcType: ''
       }
     },
 
@@ -150,6 +152,10 @@
       },
 
       readHeader () {
+        this.header = ''
+        this.romName = ''
+        this.romSize = 0
+        this.ramSize = 0
         joey.readCartHeader(this.device)
         .then(
           data => {
@@ -157,12 +163,16 @@
               this.header += e
             })
             this.romName = this.header.slice(0x32, 0x41)
+            const MBCtypes = ['ROMONLY', 'MBC1', 'MBC1+RAM', 'MBC1+RAM+BATTERY', 'MBC2', 'MBC2+BATTERY', 'ROM+RAM', 'ROM+RAM+BATTERY', 'MMM01', 'MMM01+RAM', 'MMM01+RAM+BATTERY', 'MBC3+TIMER+BATTERY', 'MBC3+TIMER+RAM+BATTERY', 'MBC3', 'MBC3+RAM', 'MBC3+RAM+BATTERY', 'MBC5', 'MBC5+RAM', 'MBC5+RAM+BATTERY', 'MBC5+RUMBLE', 'MBC5+RUMBLE+RAM', 'MBC5+RUMBLE+RAM+BATTERY', 'MBC6', 'MBC7+SENSOR+RUMBLE+RAM+BATTERY', 'POCKET CAMERA', 'BANDAI TAMA5', 'HuC3', 'HuC1+RAM+BATTERY']
             const RAMtypes = ['no SRAM', '2 kilobytes', '8 kilobytes', '32 kilobytes', '128 kilobytes', '64 kilobytes']
             const ROMtypes = ['32 kilobytes', '64 kilobytes', '128 kilobytes', '256 kilobytes', '512 kilobytes', '1 megabyte', '2 megabytes', '4 megabytes', '8 megabytes', '1.1 megabytes', '1.2 megabytes', '1.5 megabytes']
             const ramIndex = this.getCharAsDecimalUTF8(this.header[0x47])
             const romIndex = this.getCharAsDecimalUTF8(this.header[0x46])
+            const MBCindex = this.getCharAsDecimalUTF8(this.header[0x45])
+            console.log(MBCindex)
             this.ramSize = RAMtypes[ramIndex]
             this.romSize = ROMtypes[romIndex]
+            this.mbcType = MBCtypes[MBCindex]
           },
 
           error => {
